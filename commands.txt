@@ -22,3 +22,13 @@ taskkill /F /PID 51328 /PID 46848 /PID 45640
 
 
 pip freeze > requirements.txt
+
+
+
+
+
+
+
+FORCEFULLY STOP UVICORN SERVER:
+tasklist | findstr uvicorn
+taskkill /PID 58420 /F

@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from .database import engine, Base
 from .routers import sensor, chat, voice          # ← Sirf ek baar ✅
 from .routers.public_chat import router as public_chat_router
+from app.routers.crop_recommendation import router as crop_recommendation_router
 from .config import CORS_ORIGINS
 
 
@@ -29,6 +30,7 @@ app.add_middleware(
 app.include_router(sensor.router)
 app.include_router(chat.router)
 app.include_router(voice.router)
+app.include_router(crop_recommendation_router)
 
 # Include public chat router (Dashboard LLM Button)
 app.include_router(public_chat_router)
