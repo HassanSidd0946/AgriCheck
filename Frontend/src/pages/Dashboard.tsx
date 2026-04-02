@@ -25,6 +25,55 @@ import {
   Legend,
 } from "recharts";
 
+const URDU_TRANSLATIONS: Record<string, string> = {
+  // Phrases
+  "within optimal range": "بہترین حد میں ہیں",
+  "slightly outside ideal range": "مثالی حد سے تھوڑا باہر ہیں",
+  "Conditions are broadly suitable.": "حالات مناسب ہیں۔",
+  // Crops
+  "Rice": "چاول",
+  "Cotton": "کپاس",
+  "Maize": "مکئی",
+  "Sugarcane": "گنا",
+  "Sorghum (Jowar)": "جوار",
+  "Millet (Bajra)": "باجرہ",
+  "Sesame (Til)": "تل",
+  "Mung Bean (Moong)": "مونگ",
+  "Moth Bean (Mash)": "ماش",
+  "Wheat": "گندم",
+  "Mustard (Sarson)": "سرسوں",
+  "Chickpea (Chanay)": "چنے",
+  "Lentil (Masoor)": "مسور",
+  "Barley (Jau)": "جو",
+  "Potato": "آلو",
+  "Tomato": "ٹماٹر",
+  "Onion (Pyaaz)": "پیاز",
+  "Chilli": "مرچ",
+  "Garlic (Lehsan)": "لہسن",
+  "Spinach (Palak)": "پالک",
+  "Sunflower": "سورج مکھی",
+  "Canola (Toria)": "کینولا",
+  "Groundnut (Mungphali)": "مونگ پھلی",
+  // Parameters
+  "pH": "پی ایچ",
+  "Nitrogen": "نائٹروجن",
+  "Phosphorus": "فاسفورس",
+  "Potassium": "پوٹاشیم",
+  "Humidity": "نمی",
+  "Temperature": "درجہ حرارت",
+  "EC": "ای سی",
+};
+
+const translateDynamicText = (text: string, lang: string) => {
+  if (lang !== "ur" || !text) return text;
+  let translated = text;
+  Object.entries(URDU_TRANSLATIONS).forEach(([eng, ur]) => {
+    const regex = new RegExp(eng.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g');
+    translated = translated.replace(regex, ur);
+  });
+  return translated;
+};
+
 interface DisplayedSensorData {
   nitrogen: number;
   phosphorus: number;
@@ -124,7 +173,7 @@ const prepareComparisonData = (data: DisplayedSensorData) => {
 };
 
 export default function Dashboard() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const navigate = useNavigate();
   const [data, setData] = useState<DisplayedSensorData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -327,9 +376,9 @@ export default function Dashboard() {
                 </div>
                 <div>
                   <p className="text-[11px] font-bold text-emerald-900 leading-tight">
-                    Top 3 Recommended Crops
+                    {t("topRecommendedCrops")}
                   </p>
-                  <p className="text-[9px] text-emerald-700 font-medium">Based on live sensor data</p>
+                  <p className="text-[9px] text-emerald-700 font-medium">{t("basedOnLiveSensorData")}</p>
                 </div>
               </div>
 
@@ -341,7 +390,7 @@ export default function Dashboard() {
                 {cropLoading ? (
                   <div className="flex items-center gap-2 text-emerald-700 text-xs py-1">
                     <Loader2 className="w-3 h-3 animate-spin" />
-                    <span className="font-medium">Analyzing soil data…</span>
+                    <span className="font-medium">{t("analyzingSoilData")}</span>
                   </div>
                 ) : cropError ? (
                   <div className="flex items-start gap-1.5">
@@ -351,6 +400,8 @@ export default function Dashboard() {
                 ) : (
                   <>
                     {cropRecs.slice(0, 3).map((crop, idx) => {
+                      const translatedName = translateDynamicText(crop.name, language);
+                      const translatedReason = crop.reason ? translateDynamicText(crop.reason, language) : "";
                       const medals = ["🥇", "🥈", "🥉"];
                       const bgColors = [
                         "bg-yellow-100/80 border-yellow-300",
@@ -364,9 +415,9 @@ export default function Dashboard() {
                         >
                           <span className="text-base leading-none mt-0.5">{medals[idx]}</span>
                           <div className="min-w-0">
-                            <p className="text-[11px] font-bold text-gray-900 truncate">{crop.name}</p>
-                            {crop.reason && (
-                              <p className="text-[9px] text-gray-600 leading-tight line-clamp-1 mt-0.5">{crop.reason}</p>
+                            <p className="text-[11px] font-bold text-gray-900 truncate">{translatedName}</p>
+                            {translatedReason && (
+                              <p className="text-[9px] text-gray-600 leading-tight line-clamp-1 mt-0.5">{translatedReason}</p>
                             )}
                           </div>
                         </div>
@@ -374,7 +425,7 @@ export default function Dashboard() {
                     })}
                     {cropSummary && (
                       <p className="text-[9px] text-emerald-800 pt-1 leading-snug line-clamp-2 italic">
-                        {cropSummary}
+                        {translateDynamicText(cropSummary, language)}
                       </p>
                     )}
                   </>
@@ -388,7 +439,7 @@ export default function Dashboard() {
                   className="w-full py-2 rounded-lg text-xs font-bold text-white shadow-md transition-all duration-200 hover:shadow-lg hover:scale-[1.02] active:scale-[0.98]"
                   style={{ background: "linear-gradient(90deg, #059669, #10b981)" }}
                 >
-                  Get More Info →
+                  {t("getMoreInfo")}
                 </button>
               </div>
             </motion.div>

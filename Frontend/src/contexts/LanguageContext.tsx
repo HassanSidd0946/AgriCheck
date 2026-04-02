@@ -175,6 +175,10 @@ const translations = {
     passwordMustBeDifferent: "New password must be different from current password",
     passwordUpdatedSuccess: "Password updated successfully!",
     incorrectCurrentPassword: "Incorrect current password",
+    topRecommendedCrops: "Top 3 Recommended Crops",
+    basedOnLiveSensorData: "Based on live sensor data",
+    analyzingSoilData: "Analyzing soil data…",
+    getMoreInfo: "Get More Info →",
   },
   ur: {
     appName: "ایگری چیک",
@@ -348,6 +352,10 @@ const translations = {
     passwordMustBeDifferent: "نیا پاس ورڈ موجودہ پاس ورڈ سے مختلف ہونا چاہیے",
     passwordUpdatedSuccess: "پاس ورڈ کامیابی سے اپ ڈیٹ ہو گیا!",
     incorrectCurrentPassword: "غلط موجودہ پاس ورڈ",
+    topRecommendedCrops: "ٹاپ 3 تجویز کردہ فصلیں",
+    basedOnLiveSensorData: "لائیو سینسر ڈیٹا پر مبنی",
+    analyzingSoilData: "مٹی کے ڈیٹا کا تجزیہ ہو رہا ہے...",
+    getMoreInfo: "مزید معلومات حاصل کریں →",
   },
 };
 
