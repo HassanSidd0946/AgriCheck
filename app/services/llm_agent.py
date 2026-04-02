@@ -1226,6 +1226,23 @@ def is_crop_recommendation_question(text: str, language: str) -> bool:
         return any(kw in text for kw in crop_keywords_ur)
 
 
+
+def _detect_season_from_message(text: str) -> str:
+    """Extract season from user message if mentioned."""
+    text_lower = text.lower()
+    # English
+    if any(w in text_lower for w in ["rabi", "winter crop", "wheat", "mustard"]):
+        return "rabi"
+    if any(w in text_lower for w in ["kharif", "summer crop", "rice", "cotton"]):
+        return "kharif"
+    # Urdu
+    if any(w in text for w in ["ربیع", "سردی", "گندم"]):
+        return "rabi"
+    if any(w in text for w in ["خریف", "گرمی", "چاول"]):
+        return "kharif"
+    return "auto"
+
+
 # ── Pakistani Crops Master List (23 crops — Kharif + Rabi + Vegetables + Oilseeds) ──
 # ● Kharif (Summer) : wheat, rice, maize, cotton, sugarcane,
 #                     sorghum (jowar), millet (bajra), sesame (til),
@@ -1335,10 +1352,13 @@ def get_agricultural_advice(
         # ── Pre-score using the shared engine (same as /api/v1/recommend-crops) ──
         sensor_dict = dict(n=n, p=p, k=k, ph=ph,
                            humidity=humidity, temperature=temp, ec=ec)
-        scored_top3 = score_crops_locally(sensor_dict)   # [{rank,name,reason}, ...]
+        #scored_top3 = score_crops_locally(sensor_dict)   # [{rank,name,reason}, ...]
+        user_season = _detect_season_from_message(user_message)
+        scored_top3 = score_crops_locally(sensor_dict, season=user_season)
         ranked_names = [c["name"] for c in scored_top3]   # locked-in order
 
         crop_instruction = f"""DETECTED LANGUAGE: {detected_language.upper()}
+        f"   Season filter applied: {user_season.upper()}\n"
 
 ⚠️ CRITICAL: You MUST reply in {detected_language.upper()} language only!
 - If English → Use PURE ENGLISH
@@ -1392,9 +1412,12 @@ Answer now in {detected_language.upper()} using the exact template structure:"""
             if hasattr(response, 'content') and response.content:
                 ai_response = response.content
             else:
-                best1 = "Wheat" if 6.0 <= ph <= 7.5 else "Maize"
-                best2 = "Potato" if k >= 150 else "Onion"
-                best3 = "Mustard (Sarson)" if temp <= 25 else "Sunflower"
+                # best1 = "Wheat" if 6.0 <= ph <= 7.5 else "Maize"
+                # best2 = "Potato" if k >= 150 else "Onion"
+                # best3 = "Mustard (Sarson)" if temp <= 25 else "Sunflower"
+                best1 = scored_top3[0]["name"]
+                best2 = scored_top3[1]["name"]
+                best3 = scored_top3[2]["name"]
                 water_tip = "every 4 days" if humidity < 35 else "every 6–7 days" if humidity < 60 else "every 9–10 days"
 
                 BASE_UREA = {"Wheat": 40, "Maize": 50, "Potato": 30, "Onion": 25, "Mustard (Sarson)": 30, "Sunflower": 35}

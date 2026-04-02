@@ -32,3 +32,11 @@ pip freeze > requirements.txt
 FORCEFULLY STOP UVICORN SERVER:
 tasklist | findstr uvicorn
 taskkill /PID 58420 /F
+
+
+
+
+
+
+npm install 
+npm run dev
