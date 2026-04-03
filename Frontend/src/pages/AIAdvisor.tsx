@@ -89,109 +89,209 @@ export default function AIAdvisor() {
   }, [messages]);
 
   // Connect to WebSocket
+  // const connectWebSocket = async () => {
+  //   try {
+  //     setIsLoading(true);
+  //     setError(null);
+
+  //     const host = window.location.hostname || "localhost";
+  //     const backendPort = "8000";
+  //     const wsUrl = `ws://${host}:${backendPort}/voice/ws/voice-advisor`;
+
+  //     addMessage("info", t("connectingToVoiceAdvisor"));
+
+  //     const ws = new WebSocket(wsUrl);
+
+  //     ws.onopen = () => {
+  //       setIsConnected(true);
+  //       setIsLoading(false);
+  //       addMessage("status", t("connectedToVoiceAdvisor"));
+
+  //       // Send initial config
+  //       if (landSize) {
+  //         ws.send(JSON.stringify({ type: "config", land_size_acres: landSize }));
+  //       }
+  //     };
+
+  //     ws.onmessage = (event) => {
+  //       try {
+  //         const data = JSON.parse(event.data);
+
+  //         switch (data.type) {
+  //           case "status":
+  //             addMessage("status", `📢 ${data.message}`);
+  //             break;
+
+  //           case "transcription":
+  //             addMessage("transcription", `${t("youSaid")}: ${data.text}`, data.language);
+  //             break;
+
+  //           case "ai_response":
+  //             addMessage("ai_response", `🤖 ${data.text}`);
+  //             break;
+
+  //           case "audio_chunk":
+  //             audioChunksRef.current.push(base64ToBytes(data.data));
+  //             addMessage("info", `📥 Received audio chunk (${audioChunksRef.current.length} chunks)`);
+  //             break;
+
+  //           case "mute_mic":
+  //             setIsMicMuted(true);
+  //             isMicMutedRef.current = true;
+  //             addMessage("mute_mic", t("micMutedAiResponding"));
+  //             break;
+
+  //           case "unmute_mic":
+  //             setIsMicMuted(false);
+  //             isMicMutedRef.current = false;
+  //             addMessage("unmute_mic", t("micUnmutedSpeakNow"));
+  //             break;
+
+  //           case "completed":
+  //             addMessage("audio_playback", t("audioReceivedPlaying"));
+  //             playAudioChunks();
+  //             break;
+
+  //           case "error":
+  //             addMessage("error", `❌ ${data.message}`);
+  //             break;
+
+  //           case "keep_alive":
+  //           case "pong":
+  //             break;
+
+  //           default:
+  //             console.log("Unknown message type:", data.type);
+  //         }
+  //       } catch (e) {
+  //         console.error("Error parsing message:", e);
+  //       }
+  //     };
+
+  //     ws.onclose = () => {
+  //       setIsConnected(false);
+  //       setIsRecording(false);
+  //       isRecordingRef.current = false;
+  //       setIsMicMuted(false);
+  //       isMicMutedRef.current = false;
+  //       addMessage("status", t("disconnected"));
+  //     };
+
+  //     ws.onerror = () => {
+  //       setError("Failed to connect to Voice Advisor. Ensure backend is running.");
+  //       setIsConnected(false);
+  //       setIsLoading(false);
+  //       addMessage("error", t("websocketFailed"));
+  //     };
+
+  //     wsRef.current = ws;
+  //   } catch (err) {
+  //     const msg = err instanceof Error ? err.message : "Connection failed";
+  //     setError(msg);
+  //     addMessage("error", `❌ ${msg}`);
+  //     setIsLoading(false);
+  //   }
+  // };
+
   const connectWebSocket = async () => {
-    try {
-      setIsLoading(true);
-      setError(null);
+  try {
+    setIsLoading(true);
+    setError(null);
 
-      const host = window.location.hostname || "localhost";
-      const backendPort = "8000";
-      const wsUrl = `ws://${host}:${backendPort}/voice/ws/voice-advisor`;
+    // ✅ Derive wss:// or ws:// from your existing VITE_API_BASE_URL env variable
+    const apiBase =
+      import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
 
-      addMessage("info", t("connectingToVoiceAdvisor"));
+    const wsUrl = apiBase
+      .replace(/^https:\/\//, "wss://")   // https://agricheck-production.up.railway.app → wss://...
+      .replace(/^http:\/\//, "ws://")     // http://127.0.0.1:8000 → ws://...
+      .concat("/voice/ws/voice-advisor"); // keep your existing backend path
 
-      const ws = new WebSocket(wsUrl);
+    addMessage("info", t("connectingToVoiceAdvisor"));
 
-      ws.onopen = () => {
-        setIsConnected(true);
-        setIsLoading(false);
-        addMessage("status", t("connectedToVoiceAdvisor"));
+    const ws = new WebSocket(wsUrl);
 
-        // Send initial config
-        if (landSize) {
-          ws.send(JSON.stringify({ type: "config", land_size_acres: landSize }));
-        }
-      };
-
-      ws.onmessage = (event) => {
-        try {
-          const data = JSON.parse(event.data);
-
-          switch (data.type) {
-            case "status":
-              addMessage("status", `📢 ${data.message}`);
-              break;
-
-            case "transcription":
-              addMessage("transcription", `${t("youSaid")}: ${data.text}`, data.language);
-              break;
-
-            case "ai_response":
-              addMessage("ai_response", `🤖 ${data.text}`);
-              break;
-
-            case "audio_chunk":
-              audioChunksRef.current.push(base64ToBytes(data.data));
-              addMessage("info", `📥 Received audio chunk (${audioChunksRef.current.length} chunks)`);
-              break;
-
-            case "mute_mic":
-              setIsMicMuted(true);
-              isMicMutedRef.current = true;
-              addMessage("mute_mic", t("micMutedAiResponding"));
-              break;
-
-            case "unmute_mic":
-              setIsMicMuted(false);
-              isMicMutedRef.current = false;
-              addMessage("unmute_mic", t("micUnmutedSpeakNow"));
-              break;
-
-            case "completed":
-              addMessage("audio_playback", t("audioReceivedPlaying"));
-              playAudioChunks();
-              break;
-
-            case "error":
-              addMessage("error", `❌ ${data.message}`);
-              break;
-
-            case "keep_alive":
-            case "pong":
-              break;
-
-            default:
-              console.log("Unknown message type:", data.type);
-          }
-        } catch (e) {
-          console.error("Error parsing message:", e);
-        }
-      };
-
-      ws.onclose = () => {
-        setIsConnected(false);
-        setIsRecording(false);
-        isRecordingRef.current = false;
-        setIsMicMuted(false);
-        isMicMutedRef.current = false;
-        addMessage("status", t("disconnected"));
-      };
-
-      ws.onerror = () => {
-        setError("Failed to connect to Voice Advisor. Ensure backend is running.");
-        setIsConnected(false);
-        setIsLoading(false);
-        addMessage("error", t("websocketFailed"));
-      };
-
-      wsRef.current = ws;
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : "Connection failed";
-      setError(msg);
-      addMessage("error", `❌ ${msg}`);
+    ws.onopen = () => {
+      setIsConnected(true);
       setIsLoading(false);
-    }
-  };
+      addMessage("status", t("connectedToVoiceAdvisor"));
+
+      // Send initial config
+      if (landSize) {
+        ws.send(JSON.stringify({ type: "config", land_size_acres: landSize }));
+      }
+    };
+
+    ws.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+
+        switch (data.type) {
+          case "status":
+            addMessage("status", `📢 ${data.message}`);
+            break;
+          case "transcription":
+            addMessage("transcription", `${t("youSaid")}: ${data.text}`, data.language);
+            break;
+          case "ai_response":
+            addMessage("ai_response", `🤖 ${data.text}`);
+            break;
+          case "audio_chunk":
+            audioChunksRef.current.push(base64ToBytes(data.data));
+            addMessage("info", `📥 Received audio chunk (${audioChunksRef.current.length} chunks)`);
+            break;
+          case "mute_mic":
+            setIsMicMuted(true);
+            isMicMutedRef.current = true;
+            addMessage("mute_mic", t("micMutedAiResponding"));
+            break;
+          case "unmute_mic":
+            setIsMicMuted(false);
+            isMicMutedRef.current = false;
+            addMessage("unmute_mic", t("micUnmutedSpeakNow"));
+            break;
+          case "completed":
+            addMessage("audio_playback", t("audioReceivedPlaying"));
+            playAudioChunks();
+            break;
+          case "error":
+            addMessage("error", `❌ ${data.message}`);
+            break;
+          case "keep_alive":
+          case "pong":
+            break;
+          default:
+            console.log("Unknown message type:", data.type);
+        }
+      } catch (e) {
+        console.error("Error parsing message:", e);
+      }
+    };
+
+    ws.onclose = () => {
+      setIsConnected(false);
+      setIsRecording(false);
+      isRecordingRef.current = false;
+      setIsMicMuted(false);
+      isMicMutedRef.current = false;
+      addMessage("status", t("disconnected"));
+    };
+
+    ws.onerror = () => {
+      setError("Failed to connect to Voice Advisor. Ensure backend is running.");
+      setIsConnected(false);
+      setIsLoading(false);
+      addMessage("error", t("websocketFailed"));
+    };
+
+    wsRef.current = ws;
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : "Connection failed";
+    setError(msg);
+    addMessage("error", `❌ ${msg}`);
+    setIsLoading(false);
+  }
+};
 
   // Disconnect from WebSocket
   const disconnectWebSocket = () => {
