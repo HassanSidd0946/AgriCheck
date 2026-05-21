@@ -10,6 +10,7 @@ interface MetricCardProps {
   status: "good" | "optimal" | "high" | "low" | "moderate";
   color: string;
   index: number;
+  idealRange?: string; // 1. New optional prop
 }
 
 const statusColors: Record<string, string> = {
@@ -20,8 +21,22 @@ const statusColors: Record<string, string> = {
   moderate: "bg-muted text-muted-foreground",
 };
 
-export function MetricCard({ icon: Icon, label, value, unit, status, color, index }: MetricCardProps) {
+export function MetricCard({
+  icon: Icon,
+  label,
+  value,
+  unit,
+  status,
+  color,
+  index,
+  idealRange, // 1. Destructure new prop
+}: MetricCardProps) {
   const { t } = useLanguage();
+
+  // 2. EC Unit Conversion Logic
+  const isEC = label.includes("EC") || label.includes("Conductivity");
+  const displayValue = isEC ? (value / 1000).toFixed(2) : value;
+  const displayUnit = isEC ? "mS/cm" : unit;
 
   return (
     <motion.div
@@ -51,15 +66,23 @@ export function MetricCard({ icon: Icon, label, value, unit, status, color, inde
           animate={{ opacity: 1, scale: 1 }}
           className="text-3xl font-bold text-foreground tabular-nums"
         >
-          {value}
+          {displayValue} {/* 2. Use converted value */}
         </motion.span>
-        <span className="text-sm text-muted-foreground">{unit}</span>
+        <span className="text-sm text-muted-foreground">{displayUnit}</span> {/* 2. Use converted unit */}
       </div>
 
-      <div className="mt-3">
-        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusColors[status]}`}>
+      {/* 3. Bottom section: status badge + optional idealRange */}
+      <div className="mt-3 flex items-center gap-2 flex-wrap">
+        <span
+          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusColors[status]}`}
+        >
           {t(status)}
         </span>
+        {idealRange && ( // 3. Conditionally render idealRange
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-muted text-muted-foreground">
+            Ideal: {idealRange}
+          </span>
+        )}
       </div>
     </motion.div>
   );
