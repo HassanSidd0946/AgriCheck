@@ -108,37 +108,30 @@ const getStatus = (key: string, val: number): "good" | "optimal" | "high" | "low
 const calculateHealthScore = (data: DisplayedSensorData): number => {
   let score = 0;
 
-  // Nitrogen score (Max 15)
   if (data.nitrogen >= 200 && data.nitrogen <= 250) score += 15;
   else if (data.nitrogen >= 150 && data.nitrogen <= 300) score += 10;
   else if (data.nitrogen > 0) score += 5;
 
-  // Phosphorus score (Max 15)
   if (data.phosphorus >= 20 && data.phosphorus <= 30) score += 15;
   else if (data.phosphorus >= 15 && data.phosphorus <= 40) score += 10;
   else if (data.phosphorus > 0) score += 5;
 
-  // Potassium score (Max 15)
   if (data.potassium >= 150 && data.potassium <= 200) score += 15;
   else if (data.potassium >= 100 && data.potassium <= 250) score += 10;
   else if (data.potassium > 0) score += 5;
 
-  // pH score (Max 15)
   if (data.ph >= 6.0 && data.ph <= 7.0) score += 15;
   else if (data.ph >= 5.5 && data.ph <= 7.5) score += 10;
   else if (data.ph > 0) score += 5;
 
-  // Temperature score (Max 10)
   if (data.soilTemp >= 20 && data.soilTemp <= 30) score += 10;
   else if (data.soilTemp >= 15 && data.soilTemp <= 35) score += 7;
   else if (data.soilTemp > 0) score += 3;
 
-  // Humidity score (Max 15)
   if (data.humidity >= 40 && data.humidity <= 70) score += 15;
   else if (data.humidity >= 30 && data.humidity <= 80) score += 10;
   else if (data.humidity > 0) score += 5;
 
-  // EC score (Max 15)
   if (data.ec >= 800 && data.ec <= 1500) score += 15;
   else if (data.ec >= 600 && data.ec <= 2000) score += 10;
   else if (data.ec > 0) score += 5;
@@ -146,29 +139,27 @@ const calculateHealthScore = (data: DisplayedSensorData): number => {
   return Math.min(100, score);
 };
 
-// Prepare radar chart data
 const prepareRadarData = (data: DisplayedSensorData) => {
   return [
-    { name: "N", value: Math.min(100, (data.nitrogen / 300) * 100), fullMark: 100 },
-    { name: "P", value: Math.min(100, (data.phosphorus / 40) * 100), fullMark: 100 },
-    { name: "K", value: Math.min(100, (data.potassium / 250) * 100), fullMark: 100 },
-    { name: "pH", value: Math.min(100, ((data.ph / 8) * 100)), fullMark: 100 },
-    { name: "Temp", value: Math.min(100, ((data.soilTemp / 40) * 100)), fullMark: 100 },
-    { name: "Humidity", value: data.humidity, fullMark: 100 },
-    { name: "EC", value: Math.min(100, ((data.ec / 2000) * 100)), fullMark: 100 },
+    { name: "N",        value: Math.min(100, (data.nitrogen / 300) * 100),    fullMark: 100 },
+    { name: "P",        value: Math.min(100, (data.phosphorus / 40) * 100),   fullMark: 100 },
+    { name: "K",        value: Math.min(100, (data.potassium / 250) * 100),   fullMark: 100 },
+    { name: "pH",       value: Math.min(100, ((data.ph / 8) * 100)),          fullMark: 100 },
+    { name: "Temp",     value: Math.min(100, ((data.soilTemp / 40) * 100)),   fullMark: 100 },
+    { name: "Humidity", value: data.humidity,                                  fullMark: 100 },
+    { name: "EC",       value: Math.min(100, ((data.ec / 2000) * 100)),       fullMark: 100 },
   ];
 };
 
-// Prepare comparison bar data
 const prepareComparisonData = (data: DisplayedSensorData) => {
   return [
-    { name: "Nitrogen", current: data.nitrogen, optimal: 225, max: 300 },
-    { name: "Phosphorus", current: data.phosphorus, optimal: 25, max: 40 },
-    { name: "Potassium", current: data.potassium, optimal: 175, max: 250 },
-    { name: "pH", current: data.ph * 10, optimal: 65, max: 80 },
-    { name: "Temperature", current: data.soilTemp, optimal: 25, max: 40 },
-    { name: "Humidity", current: data.humidity, optimal: 55, max: 100 },
-    { name: "EC", current: data.ec / 10, optimal: 115, max: 200 },
+    { name: "Nitrogen",    current: data.nitrogen,     optimal: 225, max: 300 },
+    { name: "Phosphorus",  current: data.phosphorus,   optimal: 25,  max: 40  },
+    { name: "Potassium",   current: data.potassium,    optimal: 175, max: 250 },
+    { name: "pH",          current: data.ph * 10,      optimal: 65,  max: 80  },
+    { name: "Temperature", current: data.soilTemp,     optimal: 25,  max: 40  },
+    { name: "Humidity",    current: data.humidity,     optimal: 55,  max: 100 },
+    { name: "EC",          current: data.ec / 10,      optimal: 115, max: 200 },
   ];
 };
 
@@ -179,7 +170,6 @@ export default function Dashboard() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Crop recommendations state
   const [cropRecs, setCropRecs] = useState<CropRecommendationItem[]>([]);
   const [cropSummary, setCropSummary] = useState<string>("");
   const [cropLoading, setCropLoading] = useState(true);
@@ -193,9 +183,7 @@ export default function Dashboard() {
       setData(transformSensorData(reading));
     } catch (err) {
       setError(
-        err instanceof Error
-          ? err.message
-          : t("failedToFetchData")
+        err instanceof Error ? err.message : t("failedToFetchData")
       );
       console.error("Failed to fetch sensor data:", err);
     } finally {
@@ -218,24 +206,21 @@ export default function Dashboard() {
   };
 
   useEffect(() => {
-    // Fetch data immediately
     fetchSensorData();
     fetchCropRecommendations();
-
-    // Set up interval to refresh data every 30 seconds
     const interval = setInterval(fetchSensorData, 30000);
-
     return () => clearInterval(interval);
   }, []);
 
+  // ── 1. metrics array with idealRange ──────────────────────────────────────
   const metrics = [
-    { key: "nitrogen", icon: Sprout, label: t("nitrogen"), value: data?.nitrogen || 0, unit: t("mgPerKg"), color: "bg-primary/10 text-primary" },
-    { key: "phosphorus", icon: FlaskConical, label: t("phosphorus"), value: data?.phosphorus || 0, unit: t("mgPerKg"), color: "bg-info/10 text-info" },
-    { key: "potassium", icon: Zap, label: t("potassium"), value: data?.potassium || 0, unit: t("mgPerKg"), color: "bg-warning/10 text-warning" },
-    { key: "ph", icon: Gauge, label: t("ph"), value: data?.ph || 0, unit: "", color: "bg-accent text-accent-foreground" },
-    { key: "soilTemp", icon: Thermometer, label: t("soilTemp"), value: data?.soilTemp || 0, unit: t("celsius"), color: "bg-destructive/10 text-destructive" },
-    { key: "humidity", icon: Droplets, label: t("humidity"), value: data?.humidity || 0, unit: t("percent"), color: "bg-info/10 text-info" },
-    { key: "ec", icon: Wind, label: t("ec"), value: data?.ec || 0, unit: t("msPerCm"), color: "bg-success/10 text-success" },
+    { key: "nitrogen",   icon: Sprout,       label: t("nitrogen"),   value: data?.nitrogen   || 0, unit: t("mgPerKg"), color: "bg-primary/10 text-primary",         idealRange: "50-150"  },
+    { key: "phosphorus", icon: FlaskConical,  label: t("phosphorus"), value: data?.phosphorus || 0, unit: t("mgPerKg"), color: "bg-info/10 text-info",               idealRange: "36-50"   },
+    { key: "potassium",  icon: Zap,           label: t("potassium"),  value: data?.potassium  || 0, unit: t("mgPerKg"), color: "bg-warning/10 text-warning",         idealRange: "131-175" },
+    { key: "ph",         icon: Gauge,         label: t("ph"),         value: data?.ph         || 0, unit: "",           color: "bg-accent text-accent-foreground",   idealRange: "5.8-6.5" },
+    { key: "soilTemp",   icon: Thermometer,   label: t("soilTemp"),   value: data?.soilTemp   || 0, unit: t("celsius"), color: "bg-destructive/10 text-destructive", idealRange: "20-30"   },
+    { key: "humidity",   icon: Droplets,      label: t("humidity"),   value: data?.humidity   || 0, unit: t("percent"), color: "bg-info/10 text-info",               idealRange: "40-70"   },
+    { key: "ec",         icon: Wind,          label: t("ec"),         value: data?.ec         || 0, unit: t("msPerCm"), color: "bg-success/10 text-success",         idealRange: "0.2-1.2" },
   ];
 
   const healthScore = data ? Math.round(calculateHealthScore(data)) : 0;
@@ -264,14 +249,12 @@ export default function Dashboard() {
         >
           <Alert variant="destructive">
             <AlertCircle className="h-4 w-4" />
-            <AlertDescription>
-              {error}
-            </AlertDescription>
+            <AlertDescription>{error}</AlertDescription>
           </Alert>
         </motion.div>
       )}
 
-      {/* Content (only show when loaded) */}
+      {/* Main Content */}
       {!isLoading && data && (
         <>
           <motion.div
@@ -340,7 +323,7 @@ export default function Dashboard() {
             </Card>
           </motion.div>
 
-          {/* Metric Cards Grid */}
+          {/* ── 2. Metric Cards Grid with idealRange prop ── */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
             {metrics.map((m, i) => (
               <MetricCard
@@ -352,40 +335,33 @@ export default function Dashboard() {
                 status={getStatus(m.key, m.value)}
                 color={m.color}
                 index={i}
+                idealRange={m.idealRange}
               />
             ))}
 
-            {/* 8th Card: Top 3 Recommended Crops — distinct premium card */}
+            {/* 8th Card: Top 3 Recommended Crops */}
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: metrics.length * 0.08 }}
               className="relative overflow-hidden rounded-xl border border-emerald-200 dark:border-emerald-900 shadow-md flex flex-col"
-              style={{
-                background: "linear-gradient(135deg, #ecfdf5 0%, #d1fae5 50%, #a7f3d0 100%)",
-              }}
+              style={{ background: "linear-gradient(135deg, #ecfdf5 0%, #d1fae5 50%, #a7f3d0 100%)" }}
             >
-              {/* Decorative blobs */}
               <div className="absolute -top-6 -right-6 w-24 h-24 rounded-full bg-emerald-400/20 blur-2xl pointer-events-none" />
               <div className="absolute -bottom-4 -left-4 w-16 h-16 rounded-full bg-teal-400/20 blur-xl pointer-events-none" />
 
-              {/* Header strip */}
               <div className="relative flex items-center gap-2 px-4 pt-4 pb-2">
                 <div className="w-9 h-9 rounded-xl bg-emerald-600 flex items-center justify-center shadow-sm shrink-0">
                   <Leaf className="w-4 h-4 text-white" />
                 </div>
                 <div>
-                  <p className="text-[11px] font-bold text-emerald-900 leading-tight">
-                    {t("topRecommendedCrops")}
-                  </p>
+                  <p className="text-[11px] font-bold text-emerald-900 leading-tight">{t("topRecommendedCrops")}</p>
                   <p className="text-[9px] text-emerald-700 font-medium">{t("basedOnLiveSensorData")}</p>
                 </div>
               </div>
 
-              {/* Divider */}
               <div className="mx-4 h-px bg-emerald-200/70" />
 
-              {/* Body */}
               <div className="relative flex-1 px-4 py-3 space-y-2">
                 {cropLoading ? (
                   <div className="flex items-center gap-2 text-emerald-700 text-xs py-1">
@@ -432,7 +408,6 @@ export default function Dashboard() {
                 )}
               </div>
 
-              {/* CTA Button */}
               <div className="relative px-4 pb-4">
                 <button
                   onClick={() => navigate("/ai-advisor")}
@@ -457,7 +432,7 @@ export default function Dashboard() {
               <h2 className="text-lg sm:text-xl font-bold text-foreground">{t("analytics")}</h2>
             </div>
 
-            {/* Radar Chart - Metric Overview */}
+            {/* Radar Chart */}
             <Card>
               <CardHeader>
                 <CardTitle className="text-base sm:text-lg">{t("sensorMetricsOverview")}</CardTitle>
@@ -483,7 +458,7 @@ export default function Dashboard() {
               </CardContent>
             </Card>
 
-            {/* Bar Chart - Current vs Optimal */}
+            {/* Bar Chart */}
             <Card>
               <CardHeader>
                 <CardTitle className="text-base sm:text-lg">{t("currentVsOptimalLevels")}</CardTitle>
@@ -520,7 +495,7 @@ export default function Dashboard() {
               </CardContent>
             </Card>
 
-            {/* Health Score Gauge-like Display */}
+            {/* Health Score */}
             <Card>
               <CardHeader>
                 <CardTitle className="text-base sm:text-lg">{t("soilHealthStatus")}</CardTitle>
@@ -528,65 +503,29 @@ export default function Dashboard() {
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-                  {/* Score Display — percentage rendered inside the circle */}
+                  {/* Score Circle */}
                   <div className="flex flex-col items-center justify-center py-4 sm:py-0">
                     <svg
                       width={typeof window !== 'undefined' && window.innerWidth < 640 ? 120 : 140}
                       height={typeof window !== 'undefined' && window.innerWidth < 640 ? 120 : 140}
                       viewBox="0 0 120 120"
                     >
-                      {/* Track circle */}
+                      <circle cx="60" cy="60" r="50" fill="none" stroke="hsl(var(--muted))" strokeWidth="8" />
                       <circle
-                        cx="60"
-                        cy="60"
-                        r="50"
-                        fill="none"
-                        stroke="hsl(var(--muted))"
-                        strokeWidth="8"
-                      />
-                      {/* Progress arc — rotated so start is at top */}
-                      <circle
-                        cx="60"
-                        cy="60"
-                        r="50"
-                        fill="none"
-                        stroke={
-                          healthScore >= 80
-                            ? "hsl(var(--success))"
-                            : healthScore >= 60
-                              ? "hsl(var(--warning))"
-                              : "hsl(var(--destructive))"
-                        }
+                        cx="60" cy="60" r="50" fill="none"
+                        stroke={healthScore >= 80 ? "hsl(var(--success))" : healthScore >= 60 ? "hsl(var(--warning))" : "hsl(var(--destructive))"}
                         strokeWidth="8"
                         strokeDasharray={`${(healthScore / 100) * 314.16} 314.16`}
                         strokeLinecap="round"
                         transform="rotate(-90 60 60)"
                       />
-                      {/* Score text — centered inside circle */}
-                      <text
-                        x="60"
-                        y="56"
-                        textAnchor="middle"
-                        dominantBaseline="middle"
-                        style={{
-                          fontSize: '22px',
-                          fontWeight: 700,
-                          fill: 'hsl(var(--primary))',
-                          fontFamily: 'inherit',
-                        }}
+                      <text x="60" y="56" textAnchor="middle" dominantBaseline="middle"
+                        style={{ fontSize: '22px', fontWeight: 700, fill: 'hsl(var(--primary))', fontFamily: 'inherit' }}
                       >
                         {healthScore}%
                       </text>
-                      <text
-                        x="60"
-                        y="76"
-                        textAnchor="middle"
-                        dominantBaseline="middle"
-                        style={{
-                          fontSize: '10px',
-                          fill: 'hsl(var(--muted-foreground))',
-                          fontFamily: 'inherit',
-                        }}
+                      <text x="60" y="76" textAnchor="middle" dominantBaseline="middle"
+                        style={{ fontSize: '10px', fill: 'hsl(var(--muted-foreground))', fontFamily: 'inherit' }}
                       >
                         {t("healthScoreLabel")}
                       </text>
@@ -598,9 +537,7 @@ export default function Dashboard() {
                     <div className="p-2 sm:p-3 rounded-lg bg-primary/5 border border-primary/20">
                       <div className="text-xs text-muted-foreground mb-1">{t("nutrients")}</div>
                       <div className="text-sm sm:text-base font-semibold">
-                        {getStatus("nitrogen", data.nitrogen) === "optimal"
-                          ? t("optimal")
-                          : t(getStatus("nitrogen", data.nitrogen))}
+                        {getStatus("nitrogen", data.nitrogen) === "optimal" ? t("optimal") : t(getStatus("nitrogen", data.nitrogen))}
                       </div>
                     </div>
                     <div className="p-2 sm:p-3 rounded-lg bg-warning/5 border border-warning/20">
@@ -617,7 +554,7 @@ export default function Dashboard() {
                     </div>
                   </div>
 
-                  {/* Metrics Summary */}
+                  {/* ── 3. Metrics Summary with fixed EC display ── */}
                   <div className="space-y-2 text-xs sm:text-sm">
                     <div className="flex justify-between items-center p-2 rounded bg-muted/30">
                       <span className="text-muted-foreground">{t("nitrogen")}</span>
@@ -645,9 +582,12 @@ export default function Dashboard() {
                     </div>
                     <div className="flex justify-between items-center p-2 rounded bg-muted/30">
                       <span className="text-muted-foreground">{t("ec")}</span>
-                      <span className="font-semibold truncate text-xs">{data.ec} {t("msPerCm")}</span>
+                      <span className="font-semibold truncate text-xs">
+                        {(data.ec / 1000).toFixed(2)} mS/cm
+                      </span>
                     </div>
                   </div>
+
                 </div>
               </CardContent>
             </Card>
